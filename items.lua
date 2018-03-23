@@ -15,7 +15,7 @@ PlaceObj('ModItemBuildingTemplate', {
 	'upgrade1_upgrade_time', 60000,
 	'upgrade1_mod_label_1', "WasteRockDumpSite",
 	'upgrade1_mod_prop_id_1', "max_amount_WasteRock",
-	'upgrade1_add_value_1', 45000,
+	'upgrade1_add_value_1', 45,
 	'display_name', T{759038059070, --[[ModItemBuildingTemplate WasteRockDumpSmall display_name]] "Upgradeable Dump Site"},
 	'display_name_pl', T{324736921511, --[[ModItemBuildingTemplate WasteRockDumpSmall display_name_pl]] "Dumping Sites"},
 	'description', T{563281929874, --[[ModItemBuildingTemplate WasteRockDumpSmall description]] "Stores <wasterock(max_amount_WasteRock)>. Waste Rock is produced as side product of different mining activities."},
