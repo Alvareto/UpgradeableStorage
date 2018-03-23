@@ -2,7 +2,7 @@ return PlaceObj('ModDef', {
 	'title', "Upgradeable Waste Rock Dump Site",
 	'tags', "",
 	'id', "ranB3gH",
-	'author', "igrgurina",
+	'author', "Alvareto",
 	'version', 27,
 	'lua_revision', 228003,
 	'code', {
