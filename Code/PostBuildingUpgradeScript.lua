@@ -51,39 +51,3 @@ function OnMsg.RocketLanded(rocket)
     g_StorageUpgradesUnlocked = true
     UnlockUpgrades()
 end
-
-
---[[
-    for _, upgrade in ipairs(self.upgrade_modifiers) do
-        if upgrade.WasteRockDumpSite_ExtraStorage ~= nil then-- .upgrade_id
-            AddCustomOnScreenNotification("BuildingUpgraded", "Upgrade", "info ID(" .. id .. "): " .. upgrade)
-        end
-        -- 
-    end
-
-
-
-if RSBTechMap[tech_id] ~= nil then 
-    local RSBTech = TechDef[tech_id]
-    local tech = RollTech(tech_id)
-    local functionName = (string.gsub)(tech_id, "RSBBreakthrough", "RSBGrant")
-    if IsTechDiscovered(tech) then
-        _, err = pcall(_G[functionName], city, RSBTech)
-        --AddCustomOnScreenNotification("LOG", "ERROR", "ERR: " .. err)
-    else
-        AddCustomOnScreenNotification("Discovery", "Breakthrough", "Discovered " .. tech)
-        DiscoverTech(tech)
-    end
-end
-
-
-for _, workplace in ipairs(UICity.labels.Workplace) do
-    if workplace.auto_performance ~= nil then
-        if workplace.default_auto_performance == nil then
-            workplace.default_auto_performance = workplace.auto_performance
-        end
-        workplace.auto_performance = workplace.default_auto_performance + g_Consts.RSBRoboticsPerformanceBonus
-        workplace.UpdatePerformance()
-    end
-end
-]]
