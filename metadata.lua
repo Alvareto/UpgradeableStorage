@@ -2,9 +2,9 @@ return PlaceObj('ModDef', {
 	'title', "Upgradeable Waste Rock Dump Site",
 	'tags', "",
 	'id', "ranB3gH",
-	'author', "CODEX",
+	'author', "igrgurina",
 	'version', 27,
-	'lua_revision', 227923,
+	'lua_revision', 228003,
 	'code', {
 		"Code/PostBuildingUpgradeScript.lua",
 		"Code/customWasteRockDumpSmall.lua",
