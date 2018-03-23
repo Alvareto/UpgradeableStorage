@@ -33,7 +33,7 @@ function OnMsg.BuildingUpgraded(self, id)
                 -- shouldn't we let people know how awesome we are
                 --AddCustomOnScreenNotification("BuildingUpgraded", "Upgrade", self.display_name[2] .. " upgraded to store " .. self.max_amount_WasteRock .. " waste rock.") -- display_name is translated string - second element in array holds actual display name
                 AddCustomOnScreenNotification("BuildingUpgraded", T{917892953978, "Building Upgraded"}, T{917892953977, "<building>"}, "UI/Icons/Sections/WasteRock_1.tga", false, 
-                {building = self.display_name, expiration = 150000, priority = "Normal",})
+                {building = self.display_name, expiration = 50000, priority = "Normal",})
                 
             end
         end
@@ -60,14 +60,14 @@ function Building:OnUpgradeToggled(upgrade_id, new_state)
             self.max_amount_WasteRock = oldMax + delta
 
         else -- false
-            if(oldMax - delta) > 0
+            if(oldMax - delta) > 0 then
                 -- downgrade: initial state (true), new state (false) -- we have to downgrade building
                 self.max_amount_WasteRock = 70000-- oldMax - delta
             end
         end
 
         AddCustomOnScreenNotification("BuildingUpgradeToggled", T{917892953978, "Building Upgrade Toggled"}, T{917892953977, "<building>"}, "UI/Icons/Sections/WasteRock_1.tga", false, 
-        {building = self.display_name .. " - " .. oldMax .. " - " .. delta, expiration = 150000, priority = "Normal",})
+        {building = self.display_name, expiration = 150000, priority = "Normal",})
     end
 end
 
@@ -82,5 +82,3 @@ function OnMsg.RocketLanded(rocket)
     g_StorageUpgradesUnlocked = true
     UnlockUpgrades()
 end
-
-
