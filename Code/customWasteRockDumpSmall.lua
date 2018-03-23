@@ -24,15 +24,28 @@ function OnMsg.ClassesBuilt()
                 "__template", 
                 "InfopanelText", 
                 "Text", 
-                T({
-                    491, 
-                    "<resource('WasteRock')><right><wasterock(Stored_WasteRock, MaxAmount_WasteRock)>"
-                })})})})
+                T({491, "<resource('WasteRock')><right><wasterock(Stored_WasteRock, MaxAmount_WasteRock)>"}), 
+            }), 
+        }), 
+    })
+end 
 
-            end 
 
-            
 
-            
 
-           
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
