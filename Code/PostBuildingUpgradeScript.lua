@@ -40,6 +40,37 @@ function OnMsg.BuildingUpgraded(self, id)
     end
 end
 
+function Building:OnUpgradeToggled(upgrade_id, new_state)
+    -- these are not the droids we are looking for
+    if upgrade_id ~= "WasteRockDumpSite_ExtraStorage" then
+        return -- where does this leave us?
+    end
+
+    -- wait, is this the right building?
+    if self.max_amount_WasteRock ~= nil then
+        -- save old max value
+        local oldMax = self.max_amount_WasteRock
+
+        -- take amount from upgrade definition
+        local delta = self.upgrade_modifiers.WasteRockDumpSite_ExtraStorage[1].amount
+        local isActive = self.upgrade_modifiers.WasteRockDumpSite_ExtraStorage[1].is_applied
+
+        if new_state or isActive then -- true
+            -- upgrade: initial state (false), new state (true) -- we have to upgrade building
+            self.max_amount_WasteRock = oldMax + delta
+
+        else -- false
+            if(oldMax - delta) > 0
+                -- downgrade: initial state (true), new state (false) -- we have to downgrade building
+                self.max_amount_WasteRock = 70000-- oldMax - delta
+            end
+        end
+
+        AddCustomOnScreenNotification("BuildingUpgradeToggled", T{917892953978, "Building Upgrade Toggled"}, T{917892953977, "<building>"}, "UI/Icons/Sections/WasteRock_1.tga", false, 
+        {building = self.display_name .. " - " .. oldMax .. " - " .. delta, expiration = 150000, priority = "Normal",})
+    end
+end
+
 -- We will unlock upgrades after the first rocket has landed on mars
 GlobalVar("g_StorageUpgradesUnlocked", false)
 
@@ -51,3 +82,5 @@ function OnMsg.RocketLanded(rocket)
     g_StorageUpgradesUnlocked = true
     UnlockUpgrades()
 end
+
+
