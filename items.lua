@@ -25,6 +25,7 @@ PlaceObj('ModItemBuildingTemplate', {
 	'entity', "WasteRockDepotBig",
 	'encyclopedia_image', "UI/Encyclopedia/DumpingSite.tga",
 	'on_off_button', false,
+	'prio_button', false,
 	'color_modifier', RGBA(122, 85, 8, 255),
 	'demolish_sinking', range(15, 30),
 	'demolish_tilt_angle', range(300, 600),
