@@ -71,22 +71,32 @@ function Building:OnUpgradeToggled(upgrade_id, new_state)
         if new_state or isActive then -- true
             -- upgrade: initial state (false), new state (true) -- we have to upgrade building
             self.max_amount_WasteRock = oldMax + delta
+            self:CheatEmpty()
             ModLog(tostring(GameTime()) .. " >= " .. tostring(self.max_amount_WasteRock))
             AddCustomOnScreenNotification("BuildingUpgradeToggled", T{917892953979, "Building Upgraded"}, T{917892953978, "<building>"}, this_mod_dir .. "UI/Icons/Notifications/building_upgraded.tga", false, {building = self.display_name, expiration = 150000, priority = "Normal",})
             --self:SetCount(oldStored)
-            CheatEmpty(self)
         else -- false
             if(oldMax - delta) > 0 then
                 -- downgrade: initial state (true), new state (false) -- we have to downgrade building
                 self.max_amount_WasteRock = 70000-- oldMax - delta
+                self:CheatEmpty()
                 ModLog(tostring(GameTime()) .. " >= " .. tostring(self.max_amount_WasteRock))
 
                 AddCustomOnScreenNotification("BuildingUpgradeToggled", T{917892953980, "Building Downgraded"}, T{917892953979, "<building>"}, this_mod_dir .. "UI/Icons/Notifications/building_upgraded_2.tga", false, {building = self.display_name, expiration = 150000, priority = "Important",})
             end
+
         end
 
     end
 end
+
+--[[function WasteRockDumpSite:CheatEmpty()
+    self.demand.WasteRock:SetAmount(self.max_amount_WasteRock)
+    if self.supply.Concrete then
+        self.supply.Concrete:SetAmount(0)
+    end
+    self:SetCount(0)
+end--]]
 
 -- We will unlock upgrades after the first rocket has landed on mars
 GlobalVar("g_StorageUpgradesUnlocked", false)
@@ -104,34 +114,3 @@ function OnMsg.RocketLanded(rocket)
     --      -- choice is 1 or 2 based on button click, if they ESC to close it returns 2
     --    )
 end
-
-
-function OnMsg.TechResearched(tech_id)
-    CreateRealTimeThread(function() 
-        if UICity.day > 1 then
-            local tech = TechDef[tech_id]
-            params = {
-                title = T{"<display_name> successfully researched", tech}, 
-                text = T{tech.description, tech}, 
-                --               text = T{"<description>", description = tech.description},
-                choice1 = "Open Research Screen", 
-                choice1_hint1 = "This will take you to the Research Screen", 
-                choice1_rollover = "Show Research Screen", 
-                choice1_rollover_title = "Research Screen", 
-                --choice1_img = "UI/Icons/Sections/research_1.tga",
-
-                choice2 = T{"OK"}, 
-                choice2_hint1 = "This will close the current popup dialogue", 
-                choice2_rollover_title = "OK", 
-                choice2_rollover = "Close Dialogue", 
-                --choice2_img = "UI/Icons/message_ok.tga",
-
-                image = "UI/Messages/research.tga", 
-            }
-            local choice = WaitPopupNotification(false, params)
-            if choice == 1 then
-                OpenResearchDialog()
-            end
-        end
-    end) -- CreateRealTimeThread
-end -- TechResearched
