@@ -121,3 +121,9 @@ function OnMsg.RocketLanded(rocket)
     --      -- choice is 1 or 2 based on button click, if they ESC to close it returns 2
     --    )
 end
+
+
+--[[ MOD COMPATIBILITY - CheatMenu --]]
+--stop these from happening
+function ChoGGi.BlockCheatEmpty()
+end
