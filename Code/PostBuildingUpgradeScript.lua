@@ -24,6 +24,7 @@ function OnMsg.BuildingUpgraded(self, id)
 
         -- save old max value
         local oldMax = self.max_amount_WasteRock
+        local oldValue = self:GetStored_WasteRock()
 
         -- is the building actually upgraded - because building_upgraded event is not evidence enough
         if self.upgrade_modifiers.WasteRockDumpSite_ExtraStorage ~= nil then
@@ -36,7 +37,10 @@ function OnMsg.BuildingUpgraded(self, id)
             if isActive then
                 -- we should probably raise this once
                 -- TODO: raise this only once
+
                 self.max_amount_WasteRock = oldMax + delta
+                self:CheatEmpty()
+                self:AddDepotResource("WasteRock", oldValue)
                 -- 
                 --UI/Icons/Notifications/research_2.tga
                 -- shouldn't we let people know how awesome we are
@@ -63,7 +67,8 @@ function Building:OnUpgradeToggled(upgrade_id, new_state)
         -- save old max value
         local oldMax = self.max_amount_WasteRock
         --local.oldStored = self.max_amount_WasteRock - (self.demand and self.demand.WasteRock:GetActualAmount() or 0)
-
+        local oldValue = self:GetStored_WasteRock()
+        
         -- take amount from upgrade definition
         local delta = self.upgrade_modifiers.WasteRockDumpSite_ExtraStorage[1].amount
         local isActive = self.upgrade_modifiers.WasteRockDumpSite_ExtraStorage[1].is_applied
@@ -72,6 +77,7 @@ function Building:OnUpgradeToggled(upgrade_id, new_state)
             -- upgrade: initial state (false), new state (true) -- we have to upgrade building
             self.max_amount_WasteRock = oldMax + delta
             self:CheatEmpty()
+            self:AddDepotResource("WasteRock", oldValue)
             ModLog(tostring(GameTime()) .. " >= " .. tostring(self.max_amount_WasteRock))
             AddCustomOnScreenNotification("BuildingUpgradeToggled", T{917892953979, "Building Upgraded"}, T{917892953978, "<building>"}, this_mod_dir .. "UI/Icons/Notifications/building_upgraded.tga", false, {building = self.display_name, expiration = 150000, priority = "Normal",})
             --self:SetCount(oldStored)
@@ -80,6 +86,7 @@ function Building:OnUpgradeToggled(upgrade_id, new_state)
                 -- downgrade: initial state (true), new state (false) -- we have to downgrade building
                 self.max_amount_WasteRock = 70000-- oldMax - delta
                 self:CheatEmpty()
+                self:AddDepotResource("WasteRock", oldValue)
                 ModLog(tostring(GameTime()) .. " >= " .. tostring(self.max_amount_WasteRock))
 
                 AddCustomOnScreenNotification("BuildingUpgradeToggled", T{917892953980, "Building Downgraded"}, T{917892953979, "<building>"}, this_mod_dir .. "UI/Icons/Notifications/building_upgraded_2.tga", false, {building = self.display_name, expiration = 150000, priority = "Important",})
