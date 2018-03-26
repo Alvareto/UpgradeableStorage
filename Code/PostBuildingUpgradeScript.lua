@@ -7,7 +7,11 @@ local function UnlockUpgrades()
         StorageMetals_ExtraStorage = true, 
         StorageConcrete_ExtraStorage = true
         StorageFood_ExtraStorage = true
-        StorageRareMetals_ExtraStorage = true
+        StorageRareMetals_ExtraStorage = true, 
+        StoragePolymers_ExtraStorage = true, 
+        StorageElectronics_ExtraStorage = true, 
+        StorageMachineParts_ExtraStorage = true, 
+        StorageFuel_ExtraStorage = true
     }
 end
 
