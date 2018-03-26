@@ -1,11 +1,16 @@
 -- Unlock upgrades we use for storage space
 local function UnlockUpgrades()
     -- TODO: maybe do this with table.insert(UICity.unlocked_upgrades, something)
-    UICity.unlocked_upgrades = {WasteRockDumpSite_ExtraStorage = true}
+    UICity.unlocked_upgrades = {WasteRockDumpSite_ExtraStorage = true, StorageMetals_ExtraStorage = true}
 end
+
+-- WasteRockDumpSite_ExtraStorage
+-- StorageMetals_ExtraStorage
+
 
 local function GetModLocation()
     -- /Code/PostBuildingUpgradeScript.lua = 35
+    -- ModLog(tostring(GameTime()) .. " >PATH= " .. tostring(ModElement:GetModRootPath()))
     return debug.getinfo(1, "S").source:sub(2, -35)
 end
 
@@ -78,7 +83,7 @@ function Building:OnUpgradeToggled(upgrade_id, new_state)
             self.max_amount_WasteRock = oldMax + delta
             self:CheatEmpty()
             self:AddDepotResource("WasteRock", oldValue)
-            ModLog(tostring(GameTime()) .. " >= " .. tostring(self.max_amount_WasteRock))
+            --ModLog(tostring(GameTime()) .. " >= " .. tostring(self.max_amount_WasteRock))
             AddCustomOnScreenNotification("BuildingUpgradeToggled", T{917892953979, "Building Upgraded"}, T{917892953978, "<building>"}, this_mod_dir .. "UI/Icons/Notifications/building_upgraded.tga", false, {building = self.display_name, expiration = 150000, priority = "Normal",})
             --self:SetCount(oldStored)
         else -- false
@@ -87,7 +92,7 @@ function Building:OnUpgradeToggled(upgrade_id, new_state)
                 self.max_amount_WasteRock = 70000-- oldMax - delta
                 self:CheatEmpty()
                 self:AddDepotResource("WasteRock", oldValue)
-                ModLog(tostring(GameTime()) .. " >= " .. tostring(self.max_amount_WasteRock))
+                --ModLog(tostring(GameTime()) .. " >= " .. tostring(self.max_amount_WasteRock))
 
                 AddCustomOnScreenNotification("BuildingUpgradeToggled", T{917892953980, "Building Downgraded"}, T{917892953979, "<building>"}, this_mod_dir .. "UI/Icons/Notifications/building_upgraded_2.tga", false, {building = self.display_name, expiration = 150000, priority = "Important",})
             end
