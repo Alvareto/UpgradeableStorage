@@ -1,7 +1,14 @@
 -- Unlock upgrades we use for storage space
 local function UnlockUpgrades()
     -- TODO: maybe do this with table.insert(UICity.unlocked_upgrades, something)
-    UICity.unlocked_upgrades = {WasteRockDumpSite_ExtraStorage = true, StorageMetals_ExtraStorage = true}
+    UICity.unlocked_upgrades = 
+    {
+        WasteRockDumpSite_ExtraStorage = true, 
+        StorageMetals_ExtraStorage = true, 
+        StorageConcrete_ExtraStorage = true
+        StorageFood_ExtraStorage = true
+        StorageRareMetals_ExtraStorage = true
+    }
 end
 
 -- WasteRockDumpSite_ExtraStorage
