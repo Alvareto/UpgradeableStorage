@@ -57,7 +57,7 @@ function OnMsg.BuildingUpgraded(self, id)
     local this_mod_dir = GetModLocation()
 
     -- wait, is this the right building?
-    if self.max_storage_per_resource ~= nil and not self.max_amount_WasteRock ~= nil then -- it's storage, but not waste rock, since that's special
+    if self.max_storage_per_resource ~= nil then -- and not self.max_amount_WasteRock ~= nil then -- it's storage, but not waste rock, since that's special
         -- save old max value
         local oldMax = self.max_storage_per_resource
 
