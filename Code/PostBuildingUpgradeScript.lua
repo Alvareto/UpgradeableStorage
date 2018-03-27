@@ -11,6 +11,26 @@ StorageUpgrades =
         "StorageMachineParts_ExtraStorage", 
         "StorageFuel_ExtraStorage", 
     }, 
+    {
+        "StorageMetals_ExtraStorage_2", 
+        "StorageConcrete_ExtraStorage_2", 
+        "StorageFood_ExtraStorage_2", 
+        "StorageRareMetals_ExtraStorage_2", 
+        "StoragePolymers_ExtraStorage_2", 
+        "StorageElectronics_ExtraStorage_2", 
+        "StorageMachineParts_ExtraStorage_2", 
+        "StorageFuel_ExtraStorage_2", 
+    }, 
+    {
+        "StorageMetals_ExtraStorage_3", 
+        "StorageConcrete_ExtraStorage_3", 
+        "StorageFood_ExtraStorage_3", 
+        "StorageRareMetals_ExtraStorage_3", 
+        "StoragePolymers_ExtraStorage_3", 
+        "StorageElectronics_ExtraStorage_3", 
+        "StorageMachineParts_ExtraStorage_3", 
+        "StorageFuel_ExtraStorage_3", 
+    }, 
 }
 
 -- Check if upgrade is storage upgrade
