@@ -1,36 +1,59 @@
-StorageUpgrades = {
-    "WasteRockDumpSite_ExtraStorage", 
-    "StorageMetals_ExtraStorage", 
-    "StorageConcrete_ExtraStorage", 
-    "StorageFood_ExtraStorage", 
-    "StorageRareMetals_ExtraStorage", 
-    "StoragePolymers_ExtraStorage", 
-    "StorageElectronics_ExtraStorage", 
-    "StorageMachineParts_ExtraStorage", 
-    "StorageFuel_ExtraStorage", 
+StorageUpgrades = 
+{
+    {
+        "WasteRockDumpSite_ExtraStorage", 
+        "StorageMetals_ExtraStorage", 
+        "StorageConcrete_ExtraStorage", 
+        "StorageFood_ExtraStorage", 
+        "StorageRareMetals_ExtraStorage", 
+        "StoragePolymers_ExtraStorage", 
+        "StorageElectronics_ExtraStorage", 
+        "StorageMachineParts_ExtraStorage", 
+        "StorageFuel_ExtraStorage", 
+    }, 
 }
 
 -- Check if upgrade is storage upgrade
 function IsStorageUpgrade(upgrade)
-    return StorageUpgrades[upgrade] ~= nil
+    for _, lvl in pairs(StorageUpgrades) do
+        if lvl[upgrade] ~= nil then
+            return true
+        end
+    end
+
+    return false
+end
+function IsStorageUpgrade_Level(upgrade, level)
+    return StorageUpgrades[level] and StorageUpgrades[level][upgrade] ~= nil
 end
 
 -- Unlock upgrades we use for storage space
-function UnlockUpgrades()
+function UnlockStorageUpgrades()
     -- UICity.unlocked_upgrades.WasteRockDumpSite_ExtraStorage = true
     -- OR
     -- UICity.unlocked_upgrades["WasteRockDumpSite_ExtraStorage"] = true
-    for _, upgrade in pairs(StorageUpgrades) do
-        UICity.unlocked_upgrades[upgrade] = true
+    for _, lvl in pairs(StorageUpgrades) do
+        for _, upgrade in pairs(lvl) do
+            UICity.unlocked_upgrades[upgrade] = true
+        end
+    end
+end
+function UnlockStorageUpgrades_Level(level)
+    if StorageUpgrades[level] then
+        local lvl = StorageUpgrades[level]
+        for _, upgrade in pairs(lvl) do
+            UICity.unlocked_upgrades[upgrade] = true
+        end
     end
 end
 
 -- shouldn't we let people know how awesome we are
-function NotifyUpgraded(self)
+function NotifyStorageUpgraded(self)
     AddCustomOnScreenNotification("BuildingUpgraded", T{917892953978, "Building Upgraded"}, T{917892953977, "<building>"}, GetModLocation() .. "UI/Icons/Notifications/building_upgraded.tga", false, {building = self.display_name, expiration = 50000, priority = "Normal",})
 end
+-- custom icons for level 2 and 3 upgrades
 
-function NotifyDowngraded(self)
+function NotifyStorageDowngraded(self)
     AddCustomOnScreenNotification("BuildingDowngraded", T{917892953980, "Building Downgraded"}, T{917892953979, "<building>"}, GetModLocation() .. "UI/Icons/Notifications/building_upgraded_2.tga", false, {building = self.display_name, expiration = 150000, priority = "Important",})
 end
 
@@ -69,12 +92,11 @@ function FillWasteRockDumpingSite(self, amount)
 end
 
 function UpgradeStorageDepot(self, upgrade_id)
-    local oldMax = self.max_storage_per_resource
-    local oldValue = GetStoredAmount(self)
-
     local active = self.upgrade_modifiers[upgrade_id][1].is_applied
     
     if active then
+        local oldMax = self.max_storage_per_resource
+        local oldValue = self.supply[self.resource]:GetActualAmount() -- GetStoredAmount(self)
 
         local property = self.upgrade_modifiers[upgrade_id][1].prop -- property = max storage capacity
         local delta = self.upgrade_modifiers[upgrade_id][1].amount -- amount = X
@@ -84,7 +106,55 @@ function UpgradeStorageDepot(self, upgrade_id)
 
         FillStorageDepot(self, oldValue, newMax)
 
-        NotifyUpgraded(self)
+        NotifyStorageUpgraded(self)
+
+    end
+end
+
+function ToggleUpgradeStorageDepot(self, upgrade_id, new_state)
+    local active = self.upgrade_modifiers[upgrade_id][1].is_applied
+
+    local oldMax = self.max_storage_per_resource
+    local oldValue = self.supply[self.resource]:GetActualAmount() -- GetStoredAmount(self)
+
+    local property = self.upgrade_modifiers[upgrade_id][1].prop -- property = max storage capacity
+    local delta = self.upgrade_modifiers[upgrade_id][1].amount -- amount = X
+
+    local newMax = oldMax
+    if active or new_state then
+        newMax = newMax + delta
+    else
+        newMax = newMax - delta
+    end
+
+    self[property] = newMax -- set max value
+
+    FillStorageDepot(self, oldValue, newMax) -- set current value (stored)
+
+    if active or new_state then
+        NotifyStorageUpgraded(self)
+    else
+        NotifyStorageDowngraded(self)
+    end
+
+end
+
+function DowngradeStorageDepot(self, upgrade_id)
+    local active = self.upgrade_modifiers[upgrade_id][1].is_applied
+    
+    if not active then --
+        local oldMax = self.max_storage_per_resource
+        local oldValue = self.supply[self.resource]:GetActualAmount() -- GetStoredAmount(self)
+
+        local property = self.upgrade_modifiers[upgrade_id][1].prop -- property = max storage capacity
+        local delta = self.upgrade_modifiers[upgrade_id][1].amount -- amount = X
+
+        local newMax = oldMax - delta --
+        self[property] = newMax
+
+        FillStorageDepot(self, oldValue, newMax)
+
+        NotifyStorageDowngraded(self) -- 
 
     end
 end
@@ -93,10 +163,6 @@ end
 -- ModLog(tostring(GameTime()) .. " >PATH= " .. tostring(ModElement:GetModRootPath()))
 local function GetModLocation()
     return ModElement.GetModRootPath() --or debug.getinfo(1, "S").source:sub(2, -35)
-end
-
-local function GetStoredAmount(self)
-    return self.supply[self.resource]:GetActualAmount() --oldValue-- storage:GetStored_
 end
 
 local function GetStored(self, resource)
@@ -139,7 +205,7 @@ function OnMsg.BuildingUpgraded(self, id)
                 self:AddDepotResource("WasteRock", oldValue)
                 -- 
                 
-                NotifyUpgraded(self)
+                NotifyStorageUpgraded(self)
             end
         end
     end
@@ -173,7 +239,7 @@ function Building:OnUpgradeToggled(upgrade_id, new_state)
             self:AddDepotResource("WasteRock", oldValue)
             --ModLog(tostring(GameTime()) .. " >= " .. tostring(self.max_amount_WasteRock))
             
-            NotifyUpgraded(self)
+            NotifyStorageUpgraded(self)
             --self:SetCount(oldStored)
         else -- false
             if(oldMax - delta) > 0 then
@@ -183,7 +249,7 @@ function Building:OnUpgradeToggled(upgrade_id, new_state)
                 self:AddDepotResource("WasteRock", oldValue)
                 --ModLog(tostring(GameTime()) .. " >= " .. tostring(self.max_amount_WasteRock))
 
-                NotifyDowngraded(self)
+                NotifyStorageDowngraded(self)
             end
 
         end
@@ -209,7 +275,7 @@ function OnMsg.RocketLanded(rocket)
         return
     end
 
-    UnlockUpgrades()
+    UnlockStorageUpgrades()
     g_StorageUpgradesUnlocked = true
 
     --CreateRealTimeThread(function()
@@ -223,3 +289,5 @@ end
 --stop these from happening
 function ChoGGi.BlockCheatEmpty()
 end
+
+
