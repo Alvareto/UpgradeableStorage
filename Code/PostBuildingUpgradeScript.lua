@@ -68,18 +68,16 @@ function FillWasteRockDumpingSite(self, amount)
     self:SetCount(_sup)
 end
 
-function UpgradeStorageDepot(self)
+function UpgradeStorageDepot(self, upgrade_id)
     local oldMax = self.max_storage_per_resource
+    local oldValue = GetStoredAmount(self)
 
-    local resource = self.storable_resources[1] -- we know we store only one resource -- what about universal
-    local oldValue = GetStored(self, resource)
-
-    local active = self.upgrade_modifiers[id][1].is_applied
+    local active = self.upgrade_modifiers[upgrade_id][1].is_applied
     
     if active then
 
-        local property = self.upgrade_modifiers[id][1].prop -- property = max storage capacity
-        local delta = self.upgrade_modifiers[id][1].amount -- amount = X
+        local property = self.upgrade_modifiers[upgrade_id][1].prop -- property = max storage capacity
+        local delta = self.upgrade_modifiers[upgrade_id][1].amount -- amount = X
 
         local newMax = oldMax + delta
         self[property] = newMax
@@ -87,14 +85,19 @@ function UpgradeStorageDepot(self)
         FillStorageDepot(self, oldValue, newMax)
 
         NotifyUpgraded(self)
+
     end
 end
 
+-- /Code/PostBuildingUpgradeScript.lua = 35
+-- ModLog(tostring(GameTime()) .. " >PATH= " .. tostring(ModElement:GetModRootPath()))
 local function GetModLocation()
     return ModElement.GetModRootPath() --or debug.getinfo(1, "S").source:sub(2, -35)
 end
--- /Code/PostBuildingUpgradeScript.lua = 35
--- ModLog(tostring(GameTime()) .. " >PATH= " .. tostring(ModElement:GetModRootPath()))
+
+local function GetStoredAmount(self)
+    return self.supply[self.resource]:GetActualAmount() --oldValue-- storage:GetStored_
+end
 
 local function GetStored(self, resource)
     return self.supply[resource]:GetActualAmount() --oldValue-- storage:GetStored_
@@ -109,35 +112,9 @@ function OnMsg.BuildingUpgraded(self, id)
     
     -- wait, is this the right building?
     if self.max_storage_per_resource ~= nil then -- and not self.max_amount_WasteRock ~= nil then -- it's storage, but not waste rock, since that's special
-        -- save old max value
-        local oldMax = self.max_storage_per_resource
-
-        -- dynamically creating and executing function to get old stored_value for specific (dynamic) resource
-        local resource = self.storable_resources[1] -- we know we store only one resource
-        local oldValue = GetStored(self, resource)
-
-        if self.upgrade_modifiers[id] ~= nil then
-            local delta = self.upgrade_modifiers[id][1].amount
-            local active = self.upgrade_modifiers[id][1].is_applied
-            local property = self.upgrade_modifiers[id][1].prop
-
-            if active then
-                -- self.max_storage_per_resource = oldMax + delta
-                -- DOCUMENTATION:
-                -- local property = self.upgrade_modifiers[id][1].prop //= max_storage_per_resource
-                -- self[property] //= self.max_storage_per_resource
-                self[property] = oldMax + delta
-
-                self:CheatEmpty()
-                self:AddDepotResource(resource, oldValue)
-
-                NotifyUpgraded(self)
-            end
-        end
+        UpgradeStorageDepot(self, upgrade_id)
     end
     
-
-
     -- wait, is this the right building?
     if self.max_amount_WasteRock ~= nil then
 
@@ -168,7 +145,7 @@ function OnMsg.BuildingUpgraded(self, id)
     end
 end
 
-local old_BuildingOnUpgradeToggled = Building.OnUpgradeToggled or function() end
+--local old_BuildingOnUpgradeToggled = Building.OnUpgradeToggled or function() end
 function Building:OnUpgradeToggled(upgrade_id, new_state)
     -- these are not the droids we are looking for
     if upgrade_id ~= "WasteRockDumpSite_ExtraStorage" then
@@ -213,7 +190,7 @@ function Building:OnUpgradeToggled(upgrade_id, new_state)
 
     end
 
-    old_BuildingOnUpgradeToggled(self)
+    --old_BuildingOnUpgradeToggled(self)
 end
 
 --[[function WasteRockDumpSite:CheatEmpty()
@@ -246,7 +223,3 @@ end
 --stop these from happening
 function ChoGGi.BlockCheatEmpty()
 end
-
-
-
-
