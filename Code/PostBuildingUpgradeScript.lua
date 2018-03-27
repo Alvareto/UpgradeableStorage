@@ -25,37 +25,88 @@ function UnlockUpgrades()
     end
 end
 
-
-local function GetModLocation()
-    -- /Code/PostBuildingUpgradeScript.lua = 35
-    -- ModLog(tostring(GameTime()) .. " >PATH= " .. tostring(ModElement:GetModRootPath()))
-    return debug.getinfo(1, "S").source:sub(2, -35)
+-- shouldn't we let people know how awesome we are
+function NotifyUpgraded(self)
+    AddCustomOnScreenNotification("BuildingUpgraded", T{917892953978, "Building Upgraded"}, T{917892953977, "<building>"}, GetModLocation() .. "UI/Icons/Notifications/building_upgraded.tga", false, {building = self.display_name, expiration = 50000, priority = "Normal",})
 end
 
--- Dynamically creating and executing function to get old stored_value for specific (dynamic) resource
-function GetStored(storage, resource)
-    --local resource = self.storable_resources[1] -- we know we store only one resource
-    local funcString = "storage:GetStored_" .. resource .. "()" -- Stored_PreciousMetals
-    --
-    local fun, err = load(funcString, nil, nil, _G)
-    local oldValue = fun()
+function NotifyDowngraded(self)
+    AddCustomOnScreenNotification("BuildingDowngraded", T{917892953980, "Building Downgraded"}, T{917892953979, "<building>"}, GetModLocation() .. "UI/Icons/Notifications/building_upgraded_2.tga", false, {building = self.display_name, expiration = 150000, priority = "Important",})
+end
 
+function FillStorageDepot(self, amount, max)
+    local resource = self.resource
 
-    return oldValue-- storage:GetStored_
+    if self.supply[resource] then
+
+        --local max_name = "max_amount_" .. resource
+        --local _max = max -- self[max_name] or max -- 180
+
+        -- test for max amount (cheat_fill)
+        local _sup = amount -- 180
+        local _dem = max - amount -- 180 - 180 = 0
+
+        self.supply[resource]:SetAmount(_sup) 
+        self.demand[resource]:SetAmount(_dem)
+
+    end
+
+    self:SetCount(self.supply[resource]:GetActualAmount())
+end
+
+function FillWasteRockDumpingSite(self, amount)
+    local _max = self.max_amount_WasteRock -- 180
+
+    -- test for max amount (cheat_fill)
+    local _sup = amount -- 180
+    local _dem = _max - amount -- 180 - 180 = 0
+
+    self.demand.WasteRock:SetAmount(_dem)
+    if self.supply.Concrete then
+        self.supply.Concrete:SetAmount(_sup / Max(1, g_Consts.WasteRockToConcreteRatio))
+    end
+    self:SetCount(_sup)
+end
+
+function UpgradeStorageDepot(self)
+    local oldMax = self.max_storage_per_resource
+
+    local resource = self.storable_resources[1] -- we know we store only one resource -- what about universal
+    local oldValue = GetStored(self, resource)
+
+    local active = self.upgrade_modifiers[id][1].is_applied
+    
+    if active then
+
+        local property = self.upgrade_modifiers[id][1].prop -- property = max storage capacity
+        local delta = self.upgrade_modifiers[id][1].amount -- amount = X
+
+        local newMax = oldMax + delta
+        self[property] = newMax
+
+        FillStorageDepot(self, oldValue, newMax)
+
+        NotifyUpgraded(self)
+    end
+end
+
+local function GetModLocation()
+    return ModElement.GetModRootPath() --or debug.getinfo(1, "S").source:sub(2, -35)
+end
+-- /Code/PostBuildingUpgradeScript.lua = 35
+-- ModLog(tostring(GameTime()) .. " >PATH= " .. tostring(ModElement:GetModRootPath()))
+
+local function GetStored(self, resource)
+    return self.supply[resource]:GetActualAmount() --oldValue-- storage:GetStored_
 end
 
 -- Add upgrade-amount to max_amount_wasterock
 function OnMsg.BuildingUpgraded(self, id)
     -- these are not the droids we are looking for
-    --if id ~= "WasteRockDumpSite_ExtraStorage" then
-
     if not IsStorageUpgrade(id) then
         return -- where does this leave us?
     end
     
-    -- 
-    local this_mod_dir = GetModLocation()
-
     -- wait, is this the right building?
     if self.max_storage_per_resource ~= nil then -- and not self.max_amount_WasteRock ~= nil then -- it's storage, but not waste rock, since that's special
         -- save old max value
@@ -80,8 +131,7 @@ function OnMsg.BuildingUpgraded(self, id)
                 self:CheatEmpty()
                 self:AddDepotResource(resource, oldValue)
 
-                AddCustomOnScreenNotification("BuildingUpgraded", T{917892953978, "Building Upgraded"}, T{917892953977, "<building>"}, this_mod_dir .. "UI/Icons/Notifications/building_upgraded.tga", false, 
-                {building = self.display_name, expiration = 50000, priority = "Normal",})
+                NotifyUpgraded(self)
             end
         end
     end
@@ -111,17 +161,14 @@ function OnMsg.BuildingUpgraded(self, id)
                 self:CheatEmpty()
                 self:AddDepotResource("WasteRock", oldValue)
                 -- 
-                --UI/Icons/Notifications/research_2.tga
-                -- shouldn't we let people know how awesome we are
-                --AddCustomOnScreenNotification("BuildingUpgraded", "Upgrade", self.display_name[2] .. " upgraded to store " .. self.max_amount_WasteRock .. " waste rock.") -- display_name is translated string - second element in array holds actual display name
-                AddCustomOnScreenNotification("BuildingUpgraded", T{917892953978, "Building Upgraded"}, T{917892953977, "<building>"}, this_mod_dir .. "UI/Icons/Notifications/building_upgraded.tga", false, 
-                {building = self.display_name, expiration = 50000, priority = "Normal",})
                 
+                NotifyUpgraded(self)
             end
         end
     end
 end
 
+local old_BuildingOnUpgradeToggled = Building.OnUpgradeToggled or function() end
 function Building:OnUpgradeToggled(upgrade_id, new_state)
     -- these are not the droids we are looking for
     if upgrade_id ~= "WasteRockDumpSite_ExtraStorage" then
@@ -148,7 +195,8 @@ function Building:OnUpgradeToggled(upgrade_id, new_state)
             self:CheatEmpty()
             self:AddDepotResource("WasteRock", oldValue)
             --ModLog(tostring(GameTime()) .. " >= " .. tostring(self.max_amount_WasteRock))
-            AddCustomOnScreenNotification("BuildingUpgradeToggled", T{917892953979, "Building Upgraded"}, T{917892953978, "<building>"}, this_mod_dir .. "UI/Icons/Notifications/building_upgraded.tga", false, {building = self.display_name, expiration = 150000, priority = "Normal",})
+            
+            NotifyUpgraded(self)
             --self:SetCount(oldStored)
         else -- false
             if(oldMax - delta) > 0 then
@@ -158,12 +206,14 @@ function Building:OnUpgradeToggled(upgrade_id, new_state)
                 self:AddDepotResource("WasteRock", oldValue)
                 --ModLog(tostring(GameTime()) .. " >= " .. tostring(self.max_amount_WasteRock))
 
-                AddCustomOnScreenNotification("BuildingUpgradeToggled", T{917892953980, "Building Downgraded"}, T{917892953979, "<building>"}, this_mod_dir .. "UI/Icons/Notifications/building_upgraded_2.tga", false, {building = self.display_name, expiration = 150000, priority = "Important",})
+                NotifyDowngraded(self)
             end
 
         end
 
     end
+
+    old_BuildingOnUpgradeToggled(self)
 end
 
 --[[function WasteRockDumpSite:CheatEmpty()
