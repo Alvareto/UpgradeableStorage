@@ -16,8 +16,10 @@ StorageUpgrades =
 -- Check if upgrade is storage upgrade
 function IsStorageUpgrade(upgrade)
     for _, lvl in pairs(StorageUpgrades) do
-        if lvl[upgrade] ~= nil then
-            return true
+        for _, up in pairs(lvl) do
+            if up == upgrade then
+                return true
+            end
         end
     end
 
@@ -134,29 +136,29 @@ function UpgradeWasteRockDumpingSite(self)
     end
 end
 
-function UpgradeStorageDepot(self, upgrade_id)
-    local active = self.upgrade_modifiers[upgrade_id][1].is_applied
+function UpgradeStorageDepot(storage, upgrade_id)
+    local active = storage.upgrade_modifiers[upgrade_id][1].is_applied
     ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_active= " .. tostring(active))
 
     if active then
-        local oldMax = self.max_storage_per_resource
+        local oldMax = storage.max_storage_per_resource
         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_oldMax= " .. tostring(oldMax))
-        local oldValue = self.supply[self.resource]:GetActualAmount() -- GetStoredAmount(self)
+        local oldValue = storage.supply[storage.resource]:GetActualAmount() -- GetStoredAmount(storage)
         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_oldValue= " .. tostring(oldValue))
 
-        local property = self.upgrade_modifiers[upgrade_id][1].prop -- property = max storage capacity
+        local property = storage.upgrade_modifiers[upgrade_id][1].prop -- property = max storage capacity
         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_property= " .. tostring(property))
-        local delta = self.upgrade_modifiers[upgrade_id][1].amount -- amount = X
+        local delta = storage.upgrade_modifiers[upgrade_id][1].amount -- amount = X
         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_delta= " .. tostring(delta))
 
         local newMax = oldMax + delta
         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_newMax= " .. tostring(newMax))
-        self[property] = newMax
-        ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_selfMax= " .. tostring(self[property]))
+        storage[property] = newMax
+        ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_storageMax= " .. tostring(storage[property]))
 
-        FillStorageDepot(self, oldValue, newMax)
+        FillStorageDepot(storage, oldValue, newMax)
 
-        NotifyStorageUpgraded(self)
+        NotifyStorageUpgraded(storage)
 
     end
 end
@@ -228,17 +230,16 @@ function OnMsg.BuildingUpgraded(self, id)
         ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:NOT_storage_upgrade")
         return -- where does this leave us?
     end
-    
-    -- wait, is this the right storage depot?
-    if self.max_storage_per_resource ~= nil then -- and not self.max_amount_WasteRock ~= nil then -- it's storage, but not waste rock, since that's special
-        ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:max_storage_per_resource= " .. tostring(self.max_storage_per_resource))
-        UpgradeStorageDepot(self, upgrade_id)
-    end
-    
-    -- wait, is this the right dumping site?
-    if self.max_amount_WasteRock ~= nil then
-        ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:max_amount_WasteRock= " .. tostring(self.max_amount_WasteRock))
+
+    -- better solution than weird attributes is to use class checking
+    if self.class == "WasteRockDumpSite" then
+        ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:Class:DumpSite= " .. tostring(self.class))
         UpgradeWasteRockDumpingSite(self)
+    elseif self.class == "UniversalStorageDepot" then
+        ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:Class:Storage= " .. tostring(self.class))
+        UpgradeStorageDepot(self, upgrade_id)
+    else
+        ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:Class:OTHER= " .. tostring(self.class))
     end
 end
 
