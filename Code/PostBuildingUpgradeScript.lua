@@ -35,6 +35,7 @@ function UnlockStorageUpgrades()
     for _, lvl in pairs(StorageUpgrades) do
         for _, upgrade in pairs(lvl) do
             UICity.unlocked_upgrades[upgrade] = true
+            ModLog(tostring(GameTime()) .. " >UNLOCKED_UPGRADE= " .. tostring(upgrade))
         end
     end
 end
@@ -43,23 +44,31 @@ function UnlockStorageUpgrades_Level(level)
         local lvl = StorageUpgrades[level]
         for _, upgrade in pairs(lvl) do
             UICity.unlocked_upgrades[upgrade] = true
+            ModLog(tostring(GameTime()) .. " >UNLOCKED_UPGRADE= " .. tostring(upgrade))
         end
     end
 end
 
 -- shouldn't we let people know how awesome we are
 function NotifyStorageUpgraded(self)
+    ModLog(tostring(GameTime()) .. " >NOTIFICATION_UPGRADE= " .. tostring(self.display_name))
     AddCustomOnScreenNotification("BuildingUpgraded", T{917892953978, "Building Upgraded"}, T{917892953977, "<building>"}, GetModLocation() .. "UI/Icons/Notifications/building_upgraded.tga", false, {building = self.display_name, expiration = 50000, priority = "Normal",})
 end
 -- custom icons for level 2 and 3 upgrades
 
 function NotifyStorageDowngraded(self)
+    ModLog(tostring(GameTime()) .. " >NOTIFICATION_UPGRADE= " .. tostring(self.display_name))
     AddCustomOnScreenNotification("BuildingDowngraded", T{917892953980, "Building Downgraded"}, T{917892953979, "<building>"}, GetModLocation() .. "UI/Icons/Notifications/building_upgraded_2.tga", false, {building = self.display_name, expiration = 150000, priority = "Important",})
 end
 
 function FillStorageDepot(self, amount, max)
-    local resource = self.resource
+    ModLog(tostring(GameTime()) .. " >FillStorageDepot_amount= " .. tostring(amount))
+    ModLog(tostring(GameTime()) .. " >FillStorageDepot_max= " .. tostring(max))
 
+    local resource = self.resource
+    ModLog(tostring(GameTime()) .. " >FillStorageDepot_resource= " .. tostring(resource))
+    
+    ModLog(tostring(GameTime()) .. " >FillStorageDepot_IFSupply= " .. tostring(self.supply[resource]))
     if self.supply[resource] then
 
         --local max_name = "max_amount_" .. resource
@@ -67,22 +76,30 @@ function FillStorageDepot(self, amount, max)
 
         -- test for max amount (cheat_fill)
         local _sup = amount -- 180
+        ModLog(tostring(GameTime()) .. " >FillStorageDepot_supply= " .. tostring(_sup))
         local _dem = max - amount -- 180 - 180 = 0
+        ModLog(tostring(GameTime()) .. " >FillStorageDepot_demand= " .. tostring(_dem))
 
-        self.supply[resource]:SetAmount(_sup) 
+        self.supply[resource]:SetAmount(_sup)
         self.demand[resource]:SetAmount(_dem)
 
     end
 
+    ModLog(tostring(GameTime()) .. " >FillStorageDepot_supplyAmount= " .. tostring(self.supply[resource]:GetActualAmount()))
     self:SetCount(self.supply[resource]:GetActualAmount())
 end
 
 function FillWasteRockDumpingSite(self, amount)
+    ModLog(tostring(GameTime()) .. " >FillWasteRockDumpingSite_amount= " .. tostring(amount))
+    
     local _max = self.max_amount_WasteRock -- 180
+    ModLog(tostring(GameTime()) .. " >FillWasteRockDumpingSite_max= " .. tostring(_max))
 
     -- test for max amount (cheat_fill)
     local _sup = amount -- 180
-    local _dem = _max - amount -- 180 - 180 = 0
+    ModLog(tostring(GameTime()) .. " >FillWasteRockDumpingSite_supply&count= " .. tostring(_sup))
+    local _dem = max - amount -- 180 - 180 = 0
+    ModLog(tostring(GameTime()) .. " >FillWasteRockDumpingSite_demand= " .. tostring(_dem))
 
     self.demand.WasteRock:SetAmount(_dem)
     if self.supply.Concrete then
@@ -91,18 +108,51 @@ function FillWasteRockDumpingSite(self, amount)
     self:SetCount(_sup)
 end
 
+function UpgradeWasteRockDumpingSite(self)
+    -- take is_applied from upgrade definition so we know if it's applied to our building
+    local active = self.upgrade_modifiers.WasteRockDumpSite_ExtraStorage[1].is_applied
+    ModLog(tostring(GameTime()) .. " >UpgradeWasteRockDumpingSite_active= " .. tostring(active))
+
+    -- omg, it is alive
+    if active then
+        -- save old max value
+        local oldMax = self.max_amount_WasteRock
+        ModLog(tostring(GameTime()) .. " >UpgradeWasteRockDumpingSite_oldMax= " .. tostring(oldMax))
+        local oldValue = self:GetStored_WasteRock()
+        ModLog(tostring(GameTime()) .. " >UpgradeWasteRockDumpingSite_oldValue= " .. tostring(oldValue))
+
+        -- take amount from upgrade definition
+        local delta = self.upgrade_modifiers.WasteRockDumpSite_ExtraStorage[1].amount
+        ModLog(tostring(GameTime()) .. " >UpgradeWasteRockDumpingSite_delta= " .. tostring(delta))
+
+        self.max_amount_WasteRock = oldMax + delta
+        ModLog(tostring(GameTime()) .. " >UpgradeWasteRockDumpingSite_selfMax= " .. tostring(self.max_amount_WasteRock))
+
+        FillWasteRockDumpingSite(self, oldValue)
+        
+        NotifyStorageUpgraded(self)
+    end
+end
+
 function UpgradeStorageDepot(self, upgrade_id)
     local active = self.upgrade_modifiers[upgrade_id][1].is_applied
-    
+    ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_active= " .. tostring(active))
+
     if active then
         local oldMax = self.max_storage_per_resource
+        ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_oldMax= " .. tostring(oldMax))
         local oldValue = self.supply[self.resource]:GetActualAmount() -- GetStoredAmount(self)
+        ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_oldValue= " .. tostring(oldValue))
 
         local property = self.upgrade_modifiers[upgrade_id][1].prop -- property = max storage capacity
+        ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_property= " .. tostring(property))
         local delta = self.upgrade_modifiers[upgrade_id][1].amount -- amount = X
+        ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_delta= " .. tostring(delta))
 
         local newMax = oldMax + delta
+        ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_newMax= " .. tostring(newMax))
         self[property] = newMax
+        ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_selfMax= " .. tostring(self[property]))
 
         FillStorageDepot(self, oldValue, newMax)
 
@@ -171,43 +221,24 @@ end
 
 -- Add upgrade-amount to max_amount_wasterock
 function OnMsg.BuildingUpgraded(self, id)
+    ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:upgrade_id= " .. tostring(id))
+
     -- these are not the droids we are looking for
     if not IsStorageUpgrade(id) then
+        ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:NOT_storage_upgrade")
         return -- where does this leave us?
     end
     
-    -- wait, is this the right building?
+    -- wait, is this the right storage depot?
     if self.max_storage_per_resource ~= nil then -- and not self.max_amount_WasteRock ~= nil then -- it's storage, but not waste rock, since that's special
+        ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:max_storage_per_resource= " .. tostring(self.max_storage_per_resource))
         UpgradeStorageDepot(self, upgrade_id)
     end
     
-    -- wait, is this the right building?
+    -- wait, is this the right dumping site?
     if self.max_amount_WasteRock ~= nil then
-
-        -- save old max value
-        local oldMax = self.max_amount_WasteRock
-        local oldValue = self:GetStored_WasteRock()
-
-        -- is the building actually upgraded - because building_upgraded event is not evidence enough
-        if self.upgrade_modifiers.WasteRockDumpSite_ExtraStorage ~= nil then
-            -- take amount from upgrade definition
-            local delta = self.upgrade_modifiers.WasteRockDumpSite_ExtraStorage[1].amount
-            -- take is_applied from upgrade definition so we know if it's applied to our building
-            local active = self.upgrade_modifiers.WasteRockDumpSite_ExtraStorage[1].is_applied
-
-            -- omg, it is alive
-            if active then
-                -- we should probably raise this once
-                -- TODO: raise this only once
-
-                self.max_amount_WasteRock = oldMax + delta
-                self:CheatEmpty()
-                self:AddDepotResource("WasteRock", oldValue)
-                -- 
-                
-                NotifyStorageUpgraded(self)
-            end
-        end
+        ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:max_amount_WasteRock= " .. tostring(self.max_amount_WasteRock))
+        UpgradeWasteRockDumpingSite(self)
     end
 end
 
