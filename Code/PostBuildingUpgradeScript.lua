@@ -45,10 +45,16 @@ function OnMsg.BuildingUpgraded(self, id)
     local this_mod_dir = GetModLocation()
 
     -- wait, is this the right building?
-    if self.max_storage_per_resource ~= nil and self.max_amount_WasteRock == nil then -- it's storage, but not waste rock, since that's special
+    if self.max_storage_per_resource ~= nil and not self.max_amount_WasteRock ~= nil then -- it's storage, but not waste rock, since that's special
         -- save old max value
         local oldMax = self.max_storage_per_resource
-        -- local oldValue = self:GetStored_WasteRock()
+
+        -- dynamically creating and executing function to get old stored_value for specific (dynamic) resource
+        local resource = self.storable_resources[1] -- we know we store only one resource
+        local funcString = "self:GetStored_" .. resource .. "()" -- Stored_PreciousMetals
+        --
+        local fun, err = load(funcString, nil, nil, _G)
+        local oldValue = fun()
 
         if self.upgrade_modifiers[id] ~= nil then
             local delta = self.upgrade_modifiers[id][1].amount
@@ -57,20 +63,20 @@ function OnMsg.BuildingUpgraded(self, id)
 
             if active then
                 -- self.max_storage_per_resource = oldMax + delta
+                -- DOCUMENTATION:
+                -- local property = self.upgrade_modifiers[id][1].prop //= max_storage_per_resource
+                -- self[property] //= self.max_storage_per_resource
                 self[property] = oldMax + delta
 
                 self:CheatEmpty()
-                -- self:AddDepotResource("WasteRock", oldValue)
+                self:AddDepotResource(resource, oldValue)
 
                 AddCustomOnScreenNotification("BuildingUpgraded", T{917892953978, "Building Upgraded"}, T{917892953977, "<building>"}, this_mod_dir .. "UI/Icons/Notifications/building_upgraded.tga", false, 
                 {building = self.display_name, expiration = 50000, priority = "Normal",})
             end
         end
     end
-    -- DOCUMENTATION:
-    -- local property = self.upgrade_modifiers[id][1].prop
-    -- self[property] //= 70000
-    --
+    
 
 
     -- wait, is this the right building?
