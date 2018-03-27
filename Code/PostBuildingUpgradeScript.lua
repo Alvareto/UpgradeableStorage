@@ -67,7 +67,9 @@ function FillStorageDepot(self, amount, max)
     ModLog(tostring(GameTime()) .. " >FillStorageDepot_amount= " .. tostring(amount))
     ModLog(tostring(GameTime()) .. " >FillStorageDepot_max= " .. tostring(max))
 
-    local resource = self.resource
+    self:CheatEmpty()
+
+    local resource = self.resource[1]
     ModLog(tostring(GameTime()) .. " >FillStorageDepot_resource= " .. tostring(resource))
     
     ModLog(tostring(GameTime()) .. " >FillStorageDepot_IFSupply= " .. tostring(self.supply[resource]))
@@ -93,6 +95,8 @@ end
 
 function FillWasteRockDumpingSite(self, amount)
     ModLog(tostring(GameTime()) .. " >FillWasteRockDumpingSite_amount= " .. tostring(amount))
+
+    self:CheatEmpty()
     
     local _max = self.max_amount_WasteRock -- 180
     ModLog(tostring(GameTime()) .. " >FillWasteRockDumpingSite_max= " .. tostring(_max))
@@ -136,29 +140,33 @@ function UpgradeWasteRockDumpingSite(self)
     end
 end
 
-function UpgradeStorageDepot(storage, upgrade_id)
-    local active = storage.upgrade_modifiers[upgrade_id][1].is_applied
+function UpgradeStorageDepot(self, upgrade_id)
+    local resource = self.resource[1]
+    -- 62203 >UpgradeStorageDepot_INIT= table: 0000029102A90030 > nil > table: 0000029102DB6288
+    ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_INIT= " .. tostring(self.display_name) .. " > " .. tostring(upgrade_id) .. " > " .. tostring(resource))
+
+    local active = self.upgrade_modifiers[upgrade_id][1].is_applied
     ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_active= " .. tostring(active))
 
     if active then
-        local oldMax = storage.max_storage_per_resource
+        local oldMax = self.max_storage_per_resource
         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_oldMax= " .. tostring(oldMax))
-        local oldValue = storage.supply[storage.resource]:GetActualAmount() -- GetStoredAmount(storage)
+        local oldValue = self.supply[resource]:GetActualAmount() -- GetStoredAmount(self)
         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_oldValue= " .. tostring(oldValue))
 
-        local property = storage.upgrade_modifiers[upgrade_id][1].prop -- property = max storage capacity
+        local property = self.upgrade_modifiers[upgrade_id][1].prop -- property = max storage capacity
         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_property= " .. tostring(property))
-        local delta = storage.upgrade_modifiers[upgrade_id][1].amount -- amount = X
+        local delta = self.upgrade_modifiers[upgrade_id][1].amount -- amount = X
         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_delta= " .. tostring(delta))
 
         local newMax = oldMax + delta
         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_newMax= " .. tostring(newMax))
-        storage[property] = newMax
-        ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_storageMax= " .. tostring(storage[property]))
+        self[property] = newMax
+        ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_storageMax= " .. tostring(self[property]))
 
-        FillStorageDepot(storage, oldValue, newMax)
+        FillStorageDepot(self, oldValue, newMax)
 
-        NotifyStorageUpgraded(storage)
+        NotifyStorageUpgraded(self)
 
     end
 end
@@ -167,7 +175,9 @@ function ToggleUpgradeStorageDepot(self, upgrade_id, new_state)
     local active = self.upgrade_modifiers[upgrade_id][1].is_applied
 
     local oldMax = self.max_storage_per_resource
-    local oldValue = self.supply[self.resource]:GetActualAmount() -- GetStoredAmount(self)
+
+    local resource = self.resource[1]
+    local oldValue = self.supply[resource]:GetActualAmount() -- GetStoredAmount(self)
 
     local property = self.upgrade_modifiers[upgrade_id][1].prop -- property = max storage capacity
     local delta = self.upgrade_modifiers[upgrade_id][1].amount -- amount = X
@@ -196,7 +206,9 @@ function DowngradeStorageDepot(self, upgrade_id)
     
     if not active then --
         local oldMax = self.max_storage_per_resource
-        local oldValue = self.supply[self.resource]:GetActualAmount() -- GetStoredAmount(self)
+
+        local resource = self.resource[1]
+        local oldValue = self.supply[resource]:GetActualAmount() -- GetStoredAmount(self)
 
         local property = self.upgrade_modifiers[upgrade_id][1].prop -- property = max storage capacity
         local delta = self.upgrade_modifiers[upgrade_id][1].amount -- amount = X
@@ -237,10 +249,12 @@ function OnMsg.BuildingUpgraded(self, id)
         UpgradeWasteRockDumpingSite(self)
     elseif self.class == "UniversalStorageDepot" then
         ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:Class:Storage= " .. tostring(self.class))
-        UpgradeStorageDepot(self, upgrade_id)
+        UpgradeStorageDepot(self, id)
     else
         ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:Class:OTHER= " .. tostring(self.class))
     end
+
+    ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded_END= " .. tostring(id))
 end
 
 --local old_BuildingOnUpgradeToggled = Building.OnUpgradeToggled or function() end
@@ -291,13 +305,42 @@ function Building:OnUpgradeToggled(upgrade_id, new_state)
     --old_BuildingOnUpgradeToggled(self)
 end
 
---[[function WasteRockDumpSite:CheatEmpty()
-    self.demand.WasteRock:SetAmount(self.max_amount_WasteRock)
-    if self.supply.Concrete then
-        self.supply.Concrete:SetAmount(0)
-    end
-    self:SetCount(0)
-end--]]
+--[[
+function StorageDepot:SetMaxCapacity(capacity)
+    local resource = self.resource[1]
+    local max_name = "max_amount_" .. resource
+    self[max_name] = capacity
+end
+
+'upgrade1_id', "StorageConcrete_ExtraStorage", 
+'upgrade1_display_name', T{773703751239, --[[ModItemBuildingTemplate StorageConcrete upgrade1_display_name] ] "Extra Storage"}, 
+'upgrade1_description', T{162309256812, --[[ModItemBuildingTemplate StorageConcrete upgrade1_description] ] "+<upgrade1_add_value_1> Storage Space."}, 
+'upgrade1_icon', "UI/Icons/Upgrades/service_bots_01.tga", 
+'upgrade1_upgrade_cost_Concrete', 10000, 
+'upgrade1_upgrade_time', 60000, 
+'upgrade1_mod_label_1', "StorageConcrete", 
+'upgrade1_mod_prop_id_1', "max_storage_per_resource", 
+'upgrade1_add_value_1', 180, 
+
+
+BuildCategories = {
+    {
+        id = "Infrastructure", 
+        name = T({
+            78, 
+            "Infrastructure"
+        }), 
+        img = "UI/Icons/bmc_infrastructure.tga", 
+        highlight_img = "UI/Icons/bmc_infrastructure_shine.tga"
+    }, 
+
+    function WasteRockDumpSite:CheatEmpty()
+        self.demand.WasteRock:SetAmount(self.max_amount_WasteRock)
+        if self.supply.Concrete then
+            self.supply.Concrete:SetAmount(0)
+        end
+        self:SetCount(0)
+    end--]]
 
 -- We will unlock upgrades after the first rocket has landed on mars
 GlobalVar("g_StorageUpgradesUnlocked", false)
@@ -321,5 +364,3 @@ end
 --stop these from happening
 function ChoGGi.BlockCheatEmpty()
 end
-
-
