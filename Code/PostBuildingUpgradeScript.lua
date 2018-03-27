@@ -32,6 +32,18 @@ local function GetModLocation()
     return debug.getinfo(1, "S").source:sub(2, -35)
 end
 
+-- Dynamically creating and executing function to get old stored_value for specific (dynamic) resource
+function GetStored(storage, resource)
+    --local resource = self.storable_resources[1] -- we know we store only one resource
+    local funcString = "storage:GetStored_" .. resource .. "()" -- Stored_PreciousMetals
+    --
+    local fun, err = load(funcString, nil, nil, _G)
+    local oldValue = fun()
+
+
+    return oldValue-- storage:GetStored_
+end
+
 -- Add upgrade-amount to max_amount_wasterock
 function OnMsg.BuildingUpgraded(self, id)
     -- these are not the droids we are looking for
@@ -51,10 +63,7 @@ function OnMsg.BuildingUpgraded(self, id)
 
         -- dynamically creating and executing function to get old stored_value for specific (dynamic) resource
         local resource = self.storable_resources[1] -- we know we store only one resource
-        local funcString = "self:GetStored_" .. resource .. "()" -- Stored_PreciousMetals
-        --
-        local fun, err = load(funcString, nil, nil, _G)
-        local oldValue = fun()
+        local oldValue = GetStored(self, resource)
 
         if self.upgrade_modifiers[id] ~= nil then
             local delta = self.upgrade_modifiers[id][1].amount
