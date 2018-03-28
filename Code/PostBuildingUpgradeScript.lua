@@ -342,6 +342,7 @@ end
 'upgrade1_mod_prop_id_1', "max_storage_per_resource", 
 'upgrade1_add_value_1', 180, 
 
+ Msg("TechResearched", tech_id, self, status.researched == 1)
 
 BuildCategories = {
     {

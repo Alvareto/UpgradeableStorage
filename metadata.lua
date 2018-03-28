@@ -3,11 +3,11 @@ return PlaceObj('ModDef', {
 	'tags', "",
 	'id', "ranB3gH",
 	'author', "Alvareto",
-	'version', 71,
+	'version', 76,
 	'lua_revision', 228184,
 	'code', {
 		"Code/PostBuildingUpgradeScript.lua",
 		"Code/customWasteRockDumpSmall.lua",
 	},
-	'saved', 1522183423,
+	'saved', 1522197366,
 })
