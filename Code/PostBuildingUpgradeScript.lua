@@ -110,7 +110,7 @@ function FillStorageDepot(self, amount, max)
     ModLog(tostring(GameTime()) .. " >FillStorageDepot_amount= " .. tostring(amount))
     ModLog(tostring(GameTime()) .. " >FillStorageDepot_max= " .. tostring(max))
 
-    self:CheatEmpty()
+    --self:CheatEmpty()
 
     local resource = self.resource[1]
     ModLog(tostring(GameTime()) .. " >FillStorageDepot_resource= " .. tostring(resource))
@@ -121,24 +121,29 @@ function FillStorageDepot(self, amount, max)
     local _dem = max - amount -- 180 - 180 = 0
     ModLog(tostring(GameTime()) .. " >FillStorageDepot_demand= " .. tostring(_dem))
 
-    
+
     if self.class == "WasteRockDumpSite" then
-        FillWasteRockDumpingSite(self, _sup, _dem)
+        ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:FILL:DumpSite= " .. tostring(self.class))
+        Fill_WasteRockDumpingSite(self, _sup, _dem)
+    elseif self.class == "UniversalStorageDepot" then
+        ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:FILL:Storage= " .. tostring(self.class))
+        Fill_StorageDepot(self, _sup, _dem, resource)
     else
-        FillStorageDepot(self, _sup, _dem, resource)
+        ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:Class:OTHER= " .. tostring(self.class))
     end
 end
 
-function FillStorageDepot(self, _sup, _dem, resource)
+function Fill_StorageDepot(self, _sup, _dem, resource)
     if self.supply[resource] then
         self.supply[resource]:SetAmount(_sup)
         self.demand[resource]:SetAmount(_dem)
     end
 
-    self:SetCount(self.supply[resource]:GetActualAmount())
+    --self:SetCount(self.supply[resource]:GetActualAmount())
+    self:SetCount(_sup)
 end
 
-function FillWasteRockDumpingSite(self, _sup, _dem)
+function Fill_WasteRockDumpingSite(self, _sup, _dem)
     self.demand.WasteRock:SetAmount(_dem)
     if self.supply.Concrete then
         self.supply.Concrete:SetAmount(_sup / Max(1, g_Consts.WasteRockToConcreteRatio))
@@ -151,41 +156,6 @@ end
 -------------- UPGRADE METHODS
 ----------------------------------------------------------------------------------------------------------------------------------------------------
 
-
--- function UpgradeStorageDepot(self, upgrade_id)
-
---     local resource = self.resource[1]
---     -- 62203 >UpgradeStorageDepot_INIT= table: 0000029102A90030 > nil > table: 0000029102DB6288
---     ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_INIT= " .. tostring(self.display_name) .. " > " .. tostring(upgrade_id) .. " > " .. tostring(resource))
-
---     local active = self.upgrade_modifiers[upgrade_id][1].is_applied
---     ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_active= " .. tostring(active))
-
---     if active then
---         local property = self.upgrade_modifiers[upgrade_id][1].prop -- property = max storage capacity
---         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_property= " .. tostring(property))
---         local delta = self.upgrade_modifiers[upgrade_id][1].amount -- amount = X
---         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_delta= " .. tostring(delta))
-
---         -- with this change we become independend of storage type
---         local oldMax = self[property] -- self.max_storage_per_resource
---         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_oldMax= " .. tostring(oldMax))
---         local oldValue = self.supply[resource]:GetActualAmount() -- GetStoredAmount(self)
---         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_oldValue= " .. tostring(oldValue))
-
-
---         local newMax = oldMax + delta
---         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_newMax= " .. tostring(newMax))
---         self[property] = newMax
---         ModLog(tostring(GameTime()) .. " >UpgradeStorageDepot_storageMax= " .. tostring(self[property]))
-
---         -- this handles both storage depots and waste rock dumping sites
---         FillStorageDepot(self, oldValue, newMax)
-
---         NotifyStorageUpgraded(self)
-
---     end
--- end
 
 function ToggleUpgradeStorageDepot(self, upgrade_id, new_state)
     ModLog(tostring(GameTime()) .. " >ToggleUpgradeStorageDepot_INIT= " .. tostring(self.display_name) .. " > " .. tostring(upgrade_id) .. " > " .. tostring(new_state))
@@ -214,9 +184,11 @@ function ToggleUpgradeStorageDepot(self, upgrade_id, new_state)
     ModLog(tostring(GameTime()) .. " >ToggleUpgradeStorageDepot_newMax= " .. tostring(newMax))
     
     self[property] = newMax -- set max value
-    ModLog(tostring(GameTime()) .. " >ToggleUpgradeStorageDepot_storageMax= " .. tostring(self[property]))
+    ModLog(tostring(GameTime()) .. " >ToggleUpgradeStorageDepot_SET_storageMax= " .. tostring(self[property]))
 
+    ModLog(tostring(GameTime()) .. " >ToggleUpgradeStorageDepot_CALL_FillStorageDepot= OLDVALUE:" .. tostring(oldValue) .. " -- NEWMAX:" .. tostring(newMax))
     FillStorageDepot(self, oldValue, newMax) -- set current value (stored)
+    ModLog(tostring(GameTime()) .. " >ToggleUpgradeStorageDepot_END_FillStorageDepot=")
 
     if active or new_state then
         NotifyStorageUpgraded(self)
@@ -241,6 +213,10 @@ end
 ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+--[[function OnMsg.ConstructionComplete(bld)
+    bld:CheatEmpty()
+end--]]
+
 -- Add upgrade-amount to max_amount_wasterock
 function OnMsg.BuildingUpgraded(self, id)
     ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:upgrade_id= " .. tostring(id))
@@ -254,19 +230,19 @@ function OnMsg.BuildingUpgraded(self, id)
     ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded:CLASS:= " .. tostring(self.class) .. ":UPGRADE:=" .. tostring(id))
 
     -- UpgradeStorageDepot(self, id) GOD HELP US
-    ToggleUpgradeStorageDepot(self, upgrade_id, true)
+    ToggleUpgradeStorageDepot(self, id, true)
 
     ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded_END= " .. tostring(id))
 end
 
-function OnMsg.TechResearched(tech_id, self, status) -- .researched == 1
+--function OnMsg.TechResearched(tech_id, self, status) -- .researched == 1
 
-end
+--end
 
 --local old_BuildingOnUpgradeToggled = Building.OnUpgradeToggled or function() end
 function Building:OnUpgradeToggled(upgrade_id, new_state)
     -- these are not the droids we are looking for
-    if not IsStorageUpgrade(id) then
+    if not IsStorageUpgrade(upgrade_id) then
         ModLog(tostring(GameTime()) .. " >OnUpgradeToggled:NOT_storage_upgrade:" .. tostring(upgrade_id) .. ":" .. tostring(new_state))
         return -- where does this leave us?
     end
