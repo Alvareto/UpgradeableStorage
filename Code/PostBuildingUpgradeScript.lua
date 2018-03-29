@@ -172,7 +172,16 @@ function ToggleUpgradeStorageDepot(self, upgrade_id, new_state)
     ModLog(tostring(GameTime()) .. " >ToggleUpgradeStorageDepot_oldMax= " .. tostring(oldMax))
     local resource = self.resource[1]
     ModLog(tostring(GameTime()) .. " >ToggleUpgradeStorageDepot_resource= " .. tostring(resource))
-    local oldValue = self.supply[resource]:GetActualAmount() -- GetStoredAmount(self)
+    
+    local oldValue
+    if self.class == "WasteRockDumpSite" then
+        oldValue = self:GetStored_WasteRock()
+    elseif self.class == "UniversalStorageDepot" then
+        oldValue = self.supply[resource]:GetActualAmount()
+    else
+        ModLog(tostring(GameTime()) .. " >ToggleUpgradeStorageDepot:Class:OTHER= " .. tostring(self.class))
+    end
+    
     ModLog(tostring(GameTime()) .. " >ToggleUpgradeStorageDepot_oldValue= " .. tostring(oldValue))
 
     local newMax = oldMax
