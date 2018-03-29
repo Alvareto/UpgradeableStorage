@@ -276,7 +276,7 @@ function OnMsg.TechResearched(tech_id) --, self, status) -- .researched == 1
         return
     end
 
-    for level, _ in ipairs(StorageTech) do
+    for level in ipairs(StorageTech) do -- traverse all keys
         if IsStorageTech_Level(tech_id, level) then
             UnlockStorageUpgrades_Level(level) 
         end 
