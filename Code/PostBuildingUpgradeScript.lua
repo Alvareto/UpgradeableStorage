@@ -1,7 +1,34 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------
 -------------- UPGRADE DEFINITIONS
 ----------------------------------------------------------------------------------------------------------------------------------------------------
+StorageTech = 
+{
+    {
+        "StorageExpansion", 
+    }, 
+    {
+        "StorageStackingMethods", 
+    }, 
+    {
+        "StorageSphericalContainers", 
+    }, 
+}
 
+-- Check if upgrade is storage upgrade
+function IsStorageTech(tech)
+    for _, lvl in pairs(StorageTech) do
+        for _, t in pairs(lvl) do
+            if t == tech then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+function IsStorageTech_Level(tech, level)
+    return StorageTech[level] and StorageTech[level][tech] ~= nil
+end
 
 StorageUpgrades = 
 {
@@ -244,9 +271,23 @@ function OnMsg.BuildingUpgraded(self, id)
     ModLog(tostring(GameTime()) .. " >MsgBuildingUpgraded_END= " .. tostring(id))
 end
 
---function OnMsg.TechResearched(tech_id, self, status) -- .researched == 1
+function OnMsg.TechResearched(tech_id) --, self, status) -- .researched == 1
+    if not IsStorageTech(tech_id) then
+        return
+    end
 
---end
+    for level, _ in ipairs(StorageTech) do
+        if IsStorageTech_Level(tech_id, level) then
+            UnlockStorageUpgrades_Level(level) 
+        end 
+    end
+
+    --[[for level = 1, 3 do 
+        if IsStorageTech_Level(tech_id, level) then
+            UnlockStorageUpgrades_Level(level) 
+        end 
+    end--]]
+end
 
 --local old_BuildingOnUpgradeToggled = Building.OnUpgradeToggled or function() end
 function Building:OnUpgradeToggled(upgrade_id, new_state)
@@ -269,28 +310,28 @@ function StorageDepot:SetMaxCapacity(capacity)
 end
 --]]
 
--- We will unlock upgrades after the first rocket has landed on mars
-GlobalVar("g_StorageUpgradesUnlocked", false)
-
-function OnMsg.RocketLanded(rocket)
-    if g_StorageUpgradesUnlocked then
-        return
-    end
-
-    UnlockStorageUpgrades()
-    g_StorageUpgradesUnlocked = true
-
-    --CreateRealTimeThread(function()
-    --    local choice = WaitCustomPopupNotification("Test", "Desc", {"YES", "NO"})
-    --      -- choice is 1 or 2 based on button click, if they ESC to close it returns 2
-    --    )
-end
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------
 -------------- MOD COMPATIBILITY
 ----------------------------------------------------------------------------------------------------------------------------------------------------
 
+
+--[[-- SurvivingHusky --]]
+-- We will unlock upgrades for husky after the first rocket has landed on mars
+GlobalVar("g_StorageUpgradesUnlocked", false)
+
+function OnMsg.RocketLanded(rocket)
+    -- if rawget(_G, "g_StorageUpgradesUnlocked") then
+    if g_StorageUpgradesUnlocked then
+        return
+    end
+
+    local sponsor = GetMissionSponsor()
+    if sponsor.name == "Husky" then
+        UnlockStorageUpgrades()
+        g_StorageUpgradesUnlocked = true
+    end
+end
 
 --[[-- CheatMenu --]]
 --stop these from happening
