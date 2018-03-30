@@ -1,0 +1,23 @@
+=============
+Version 2.0.0
+=============
+IMPORTANT! Breaking changes - not save-game compatible with previous version!
+Storage upgrades are now locked behind research.
+Added 3 storage upgrades for each storage depot (concrete, metal, rare metal, food, polymer, machine parts, electronics, fuel).
+Modified 1 storage upgrade for waste rock dumping site.
+Added 2 new technologies (Engineering, Robotics) and 1 breakthrough technology that together unlock a total of 3 storage upgrades.
+Added custom building icons for upgradeable storage depots (only one for dumping site is visible).
+Added compatibility with my SurvivingHusky mod - Northern Lights mission sponsor has all storage upgrades unlocked at game start.
+Fixed bugs with toggling storage upgrades. They now properly scale for all storage types.
+Fixed bugs with supply and demand network. Resources you had before upgrade = resources you have after upgrade.
+Removed priority from storage upgrades.
+=============
+Version 1.0.0
+=============
+Added upgrade priority.
+Added mod support for CheatMenu.
+=============
+Version 0.9.7
+=============
+Added better upgrade notifications with custom icons.
+Fixed bug with resources appearing out of nowhere.

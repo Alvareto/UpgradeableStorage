@@ -356,8 +356,13 @@ function OnMsg.RocketLanded(rocket)
     if sponsor.name == "Husky" then
         ModLog(tostring(GameTime()) .. " >MsgRocketLanded:SPONSOR:= " .. tostring(sponsor.name))
 
-        UnlockStorageUpgrades()
+        --UnlockStorageUpgrades()
         g_StorageUpgradesUnlocked = true
+
+        -- grant technologies so they're not pointless
+        GrantTech("StorageExpansion") -- 
+        GrantTech("StorageStackingMethods") -- 
+        GrantTech("StorageSphericalContainers") -- 
 
         ModLog(tostring(GameTime()) .. " >MsgRocketLanded:END:= ")
     end
