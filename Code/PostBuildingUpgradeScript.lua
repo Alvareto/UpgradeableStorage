@@ -27,7 +27,16 @@ function IsStorageTech(tech)
     return false
 end
 function IsStorageTech_Level(tech, level)
-    return StorageTech[level] and StorageTech[level][tech] ~= nil
+    if StorageTech[level] then
+        local lvl = StorageTech[level] -- set fixed level
+        for _, t in pairs(lvl) do
+            if t == tech then
+                return true
+            end
+        end
+    end
+
+    return false
 end
 
 StorageUpgrades = 
@@ -78,7 +87,15 @@ function IsStorageUpgrade(upgrade)
     return false
 end
 function IsStorageUpgrade_Level(upgrade, level)
-    return StorageUpgrades[level] and StorageUpgrades[level][upgrade] ~= nil
+    if StorageUpgrades[level] then
+        local lvl = StorageTech[level] -- set fixed level
+        for _, up in pairs(lvl) do
+            if up == upgrade then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 
@@ -239,8 +256,8 @@ end
 ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-local function GetModLocation()
-    return ModElement.GetModRootPath() --or debug.getinfo(1, "S").source:sub(2, -35) -- /Code/PostBuildingUpgradeScript.lua = 35
+function GetModLocation()
+    return ModElement.GetModRootPath() or debug.getinfo(1, "S").source:sub(2, -35) -- /Code/PostBuildingUpgradeScript.lua = 35
 end
 
 
@@ -273,14 +290,23 @@ end
 
 function OnMsg.TechResearched(tech_id) --, self, status) -- .researched == 1
     if not IsStorageTech(tech_id) then
+        ModLog(tostring(GameTime()) .. " >MsgTechResearched:NOT_storage_tech:= " .. tostring(tech_id))
         return
     end
 
-    for level in ipairs(StorageTech) do -- traverse all keys
+    ModLog(tostring(GameTime()) .. " >MsgTechResearched:Storage:tech_id:= " .. tostring(tech_id))
+
+    for level, _ in ipairs(StorageTech) do -- traverse all keys
+        ModLog(tostring(GameTime()) .. " >MsgTechResearched:Storage:Tech:IsStorageTech_Level:= " .. tostring(tech_id) .. "==LEVEL=" .. tostring(level))
+
         if IsStorageTech_Level(tech_id, level) then
+            ModLog(tostring(GameTime()) .. " >MsgTechResearched:Storage:Tech:UNLOCK:= " .. tostring(tech_id) .. "==LEVEL=" .. tostring(level))
+
             UnlockStorageUpgrades_Level(level) 
         end 
     end
+
+    ModLog(tostring(GameTime()) .. " >MsgTechResearched:END")
 
     --[[for level = 1, 3 do 
         if IsStorageTech_Level(tech_id, level) then
@@ -328,8 +354,12 @@ function OnMsg.RocketLanded(rocket)
 
     local sponsor = GetMissionSponsor()
     if sponsor.name == "Husky" then
+        ModLog(tostring(GameTime()) .. " >MsgRocketLanded:SPONSOR:= " .. tostring(sponsor.name))
+
         UnlockStorageUpgrades()
         g_StorageUpgradesUnlocked = true
+
+        ModLog(tostring(GameTime()) .. " >MsgRocketLanded:END:= ")
     end
 end
 
