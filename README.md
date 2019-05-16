@@ -2,7 +2,7 @@
 
 # Storage Upgrades
 ## Download
-Available on Nexus mods:  [DOWNLOAD](https://www.nexusmods.com/survivingmars/mods/3) with 32 Endorsements, 2834 Total Downloads and 7410 Total views.
+Available on Nexus mods:  [DOWNLOAD](https://www.nexusmods.com/survivingmars/mods/3) with `63 Endorsements`, `4328 Total Downloads` and `14247 Total views`.
 
 ## Dumping Site
 Adds ability to upgrade waste rock Dumping Site. Does not override base game buildings. Upgrade gives more place for storage.
